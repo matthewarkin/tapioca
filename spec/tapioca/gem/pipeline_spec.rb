@@ -1172,6 +1172,60 @@ class Tapioca::Gem::PipelineSpec < Minitest::HooksSpec
       assert_equal(output, compile)
     end
 
+    it "handles dynamic mixins on standard library constants" do
+      add_ruby_file("foo.rb", <<~RUBY)
+        module Foo; end
+        Range.prepend(Foo)
+      RUBY
+
+      output = template(<<~RBI)
+        module Foo; end
+
+        class Range
+          include ::Foo
+        end
+      RBI
+
+      assert_equal(output, compile)
+    end
+
+    it "handles re-opened standard library constants" do
+      add_ruby_file("foo.rb", <<~RUBY)
+        module Foo; end
+
+        class Range
+          include Foo
+        end
+      RUBY
+
+      output = template(<<~RBI)
+        module Foo; end
+
+        class Range
+          include ::Foo
+        end
+      RBI
+
+      assert_equal(output, compile)
+    end
+
+    it "handles dynamic mixins with Module.new on standard library constants" do
+      add_ruby_file("foo.rb", <<~RUBY)
+        module Foo; end
+        Range.prepend(Module.new, Foo)
+      RUBY
+
+      output = template(<<~RBI)
+        module Foo; end
+
+        class Range
+          include ::Foo
+        end
+      RBI
+
+      assert_equal(output, compile)
+    end
+
     it "compiles methods on the class's singleton class" do
       add_ruby_file("bar.rb", <<~RUBY)
         class Bar
