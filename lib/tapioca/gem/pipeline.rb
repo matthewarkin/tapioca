@@ -33,6 +33,7 @@ module Tapioca
         @node_listeners << Gem::Listeners::SorbetTypeVariables.new(self)
         @node_listeners << Gem::Listeners::Mixins.new(self)
         @node_listeners << Gem::Listeners::DynamicMixins.new(self)
+        @node_listeners << Gem::Listeners::DynamicMixees.new(self)
         @node_listeners << Gem::Listeners::Methods.new(self)
         @node_listeners << Gem::Listeners::SorbetHelpers.new(self)
         @node_listeners << Gem::Listeners::SorbetEnums.new(self)

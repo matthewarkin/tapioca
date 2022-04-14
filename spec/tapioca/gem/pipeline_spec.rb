@@ -1183,6 +1183,7 @@ class Tapioca::Gem::PipelineSpec < Minitest::HooksSpec
 
         class Range
           include ::Foo
+          include ::Enumerable
         end
       RBI
 
@@ -1202,6 +1203,7 @@ class Tapioca::Gem::PipelineSpec < Minitest::HooksSpec
         module Foo; end
 
         class Range
+          include ::Enumerable
           include ::Foo
         end
       RBI
@@ -1220,6 +1222,7 @@ class Tapioca::Gem::PipelineSpec < Minitest::HooksSpec
 
         class Range
           include ::Foo
+          include ::Enumerable
         end
       RBI
 

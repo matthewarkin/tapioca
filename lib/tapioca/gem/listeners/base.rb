@@ -17,6 +17,7 @@ module Tapioca
 
         sig { params(event: NodeAdded).void }
         def dispatch(event)
+          require "byebug"
           case event
           when ConstNodeAdded
             on_const(event)

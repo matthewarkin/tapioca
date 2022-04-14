@@ -3,6 +3,7 @@
 
 require "tapioca/gem/listeners/base"
 require "tapioca/gem/listeners/dynamic_mixins"
+require "tapioca/gem/listeners/dynamic_mixees"
 require "tapioca/gem/listeners/methods"
 require "tapioca/gem/listeners/mixins"
 require "tapioca/gem/listeners/remove_empty_payload_scopes"
