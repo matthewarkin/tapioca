@@ -23,20 +23,19 @@ module Tapioca
             constant: Module,
             mod: Module,
             mixin_type: Type,
-            locations: T.nilable(T::Array[Thread::Backtrace::Location])
           ).void
         end
-        def self.register(constant, mod, mixin_type, locations)
-          locations ||= []
-          locations.map!(&:absolute_path).uniq!
+        def self.register(constant, mod, mixin_type)
+          location = Tapioca::Runtime::Reflection.required_from_location
+
           locs = mixin_locations_for(constant)
-          locs.fetch(mixin_type).store(mod, T.cast(locations, T::Array[String]))
+          locs.fetch(mixin_type).store(mod, location)
 
           constants = constants_with_mixin(mod)
-          constants.fetch(mixin_type).store(constant, T.cast(locations, T::Array[String]))
+          constants.fetch(mixin_type).store(constant, location)
         end
 
-        sig { params(constant: Module).returns(T::Hash[Type, T::Hash[Module, T::Array[String]]]) }
+        sig { params(constant: Module).returns(T::Hash[Type, T::Hash[Module, String]]) }
         def self.mixin_locations_for(constant)
           @mixin_map[constant] ||= {
             Type::Prepend => {}.compare_by_identity,
@@ -45,7 +44,7 @@ module Tapioca
           }
         end
 
-        sig { params(mixin: Module).returns(T::Hash[Type, T::Hash[Module, T::Array[String]]]) }
+        sig { params(mixin: Module).returns(T::Hash[Type, T::Hash[Module, String]]) }
         def self.constants_with_mixin(mixin)
           @constant_map[mixin] ||= {
             Type::Prepend => {}.compare_by_identity,
@@ -65,7 +64,6 @@ class Module
         constant,
         self,
         Tapioca::Runtime::Trackers::Mixin::Type::Prepend,
-        caller_locations
       )
       super
     end
@@ -75,7 +73,6 @@ class Module
         constant,
         self,
         Tapioca::Runtime::Trackers::Mixin::Type::Include,
-        caller_locations
       )
       super
     end
@@ -85,7 +82,6 @@ class Module
         obj,
         self,
         Tapioca::Runtime::Trackers::Mixin::Type::Extend,
-        caller_locations
       ) if Module === obj
       super
     end

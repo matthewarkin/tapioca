@@ -75,6 +75,8 @@ module Tapioca
 
           return Set.new if output.nil? || output.empty?
 
+          puts output
+
           SymbolTableParser.parse_json(output)
         end
       end

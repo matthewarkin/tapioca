@@ -25,25 +25,35 @@ module Tapioca
             Module != class_of(mod) || are_equal?(mod, singleton_class)
           end
 
+          require "byebug"
+          byebug if constant == ActionPack
+
           node = event.node
-          add_mixins(node, prepends.reverse, Runtime::Trackers::Mixin::Type::Prepend)
-          add_mixins(node, includes.reverse, Runtime::Trackers::Mixin::Type::Include)
-          add_mixins(node, extends.reverse, Runtime::Trackers::Mixin::Type::Extend)
+          mixin_locations = Runtime::Trackers::Mixin.mixin_locations_for(constant)
+
+          add_mixins(node, prepends.reverse, Runtime::Trackers::Mixin::Type::Prepend,
+            mixin_locations.fetch(Runtime::Trackers::Mixin::Type::Prepend))
+          add_mixins(node, includes.reverse, Runtime::Trackers::Mixin::Type::Include,
+            mixin_locations.fetch(Runtime::Trackers::Mixin::Type::Include))
+          add_mixins(node, extends.reverse, Runtime::Trackers::Mixin::Type::Extend,
+            mixin_locations.fetch(Runtime::Trackers::Mixin::Type::Extend))
         end
 
         sig do
           params(
             tree: RBI::Tree,
             mods: T::Array[Module],
-            mixin_type: Runtime::Trackers::Mixin::Type
+            mixin_type: Runtime::Trackers::Mixin::Type,
+            mixin_locations: T::Hash[Module, String],
           ).void
         end
-        def add_mixins(tree, mods, mixin_type)
+        def add_mixins(tree, mods, mixin_type, mixin_locations)
           mods
             .select do |mod|
               name = @pipeline.name_of(mod)
+              mixin_location = mixin_locations[mod]
 
-              name && !filtered_mixin?(name)
+              name && !filtered_mixin?(name, T.must(mixin_location))
             end
             .map do |mod|
               name = @pipeline.name_of(mod)
@@ -62,11 +72,20 @@ module Tapioca
             end
         end
 
-        sig { params(mixin_name: String).returns(T::Boolean) }
-        def filtered_mixin?(mixin_name)
+        sig { params(mixin_name: String, mixin_location: String).returns(T::Boolean) }
+        def filtered_mixin?(mixin_name, mixin_location)
           # filter T:: namespace mixins that aren't T::Props
           # T::Props and subconstants have semantic value
-          mixin_name.start_with?("T::") && !mixin_name.start_with?("T::Props")
+          (mixin_name.start_with?("T::") && !mixin_name.start_with?("T::Props")) || !mixed_in_by_gem?(mixin_location)
+        end
+
+        APP_CONFIG_FOLDER = T.let(Bundler.default_gemfile.join("../config").expand_path.to_s, String)
+
+        sig { params(mixin_location: T.nilable(String)).returns(T::Boolean) }
+        def mixed_in_by_gem?(mixin_location)
+          return false unless mixin_location
+
+          @pipeline.gem.contains_path?(mixin_location) || mixin_location.start_with?(APP_CONFIG_FOLDER)
         end
 
         sig { params(constant: Module).returns(T::Array[Module]) }
