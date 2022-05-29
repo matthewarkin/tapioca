@@ -65,7 +65,7 @@ module Tapioca
       def execute
         load_dsl_extensions
         load_application(eager_load: @requested_constants.empty?)
-        abort_if_pending_migrations!
+        # abort_if_pending_migrations!
         load_dsl_compilers
 
         if @should_verify
