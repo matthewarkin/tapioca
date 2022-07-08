@@ -20,7 +20,7 @@ module Tapioca
       #
       # So we implement our own version here to work around those problems.
       shell.indent(-shell.padding) do
-        super(message, color)
+        say(message, color)
       end
     end
 
